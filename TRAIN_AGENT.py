@@ -14,7 +14,7 @@ from LANGEVIN2D_ENV import Langevin2D_Env
 ###############################################################################
 
 # Saver directory
-directory = os.path.join(os.getcwd(), 'agents' ,'saver_data_D_0_dta_0p05_maxa_1_ep300_lstm1_32_gr_1_wn_1_r_ma1em1')
+directory = os.path.join(os.getcwd(), 'agents' ,'saver_data_D_0_dta_0p05_maxa_1_ep300_lstm1_6_gr_1_wn_1_r_ma1em1')
 
 # Environment Parameters
 env_params = {
@@ -35,7 +35,7 @@ optimization_params = {
 # Training Parameters
 training_params = {
     "num_episodes" : 300,
-    "dt_action"    : 0.05
+    "dt_action"    : 0.5
 }
 
 # Compute environment and action input timesteps
@@ -55,22 +55,21 @@ environment.optimization_params = optimization_params
 actor_network = [
     [   
         dict(type='retrieve', tensors='observation'),
-        dict(type='dense', size=16),
+        dict(type='internal_lstm', size=6, length=1, bias=False),
         dict(type='register' , tensor ='intermed-1')
     ],
     [   
         dict(type='retrieve', tensors='prev_action'),
-        dict(type='dense', size=16),
+        dict(type='internal_lstm', size=6, length=1, bias=True),
         dict(type='register' , tensor ='intermed-2')
     ],
     [
         dict(type='retrieve', tensors=['intermed-1','intermed-2'], aggregation='concat'),
-        dict(type='internal_lstm', size=32, length=1, bias=True),
-        dict(type='dense', size=16),
+        dict(type='dense', size=12),
     ]
 ]
 
-critic_network = "auto"
+critic_network = actor_network
 
 ###############################################################################
 #       AGENT DEFINITION
@@ -85,9 +84,9 @@ agent = Agent.create(
     # Network
     network=actor_network,  # Policy NN specification
     # Optimization
-    batch_size=3,  # Number of episodes per update batch
+    batch_size=10,  # Number of episodes per update batch
     learning_rate=1e-3,  # Optimizer learning rate
-    subsampling_fraction=0.75,  # Fraction of batch timesteps to subsample
+    subsampling_fraction=0.33,  # Fraction of batch timesteps to subsample
     optimization_steps=25,
     # Reward estimation
     likelihood_ratio_clipping=0.2, # The epsilon of the ppo CLI objective

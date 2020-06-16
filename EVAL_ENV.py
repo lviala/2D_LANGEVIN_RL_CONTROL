@@ -8,7 +8,7 @@ from scipy import signal
 env_params = {
                 "dt": 0.0005,
                 "T" : 10.0,
-                "a" : 10.0 +10.0j,
+                "a" : 1.0 +1.0j,
                 "b" : -5.0e2,
                 "D" : 0.0e-4,
                 "x0": 0.03 + 0.0j
@@ -28,36 +28,37 @@ environment.env_params = env_params
 time  = np.zeros((environment.max_episode_timesteps()))
 states  = np.zeros((environment.max_episode_timesteps(),2))
 actions  = np.zeros((environment.max_episode_timesteps(),2))
-states[0,:] = environment.reset()
+state = environment.reset()
+states[0,:] = state["observation"]
 
 # Episode reward - defined as magnitude of the complex state
 sum_rewards = 0.0
 
 # Set up control time with reference to simulation time
 dt = environment.env_params["dt"]
-dt_action = 0.005 #environment.env_params["dt"]
+dt_action = 0.05
 T = environment.env_params["T"]
 n_env_steps = int(dt_action / dt)
 n_actions = int(T/dt/n_env_steps)
-print(n_env_steps,n_actions)
 
 # Proportional gain - If using feedback control
 Kp_r = 0.0
 Kp_i = 0.0
 max_forcing_mag = 1.0
 
-state = states[0,:]
+observation = states[0,:]
 
 # March system for specified number of timesteps
 
 for ii in range(0,n_actions):
 
-    p_control = np.array([-Kp_r*state[0] , -Kp_i*state[1]])
+    p_control = np.array([-Kp_r*observation[0] , -Kp_i*observation[1]])
     
     for jj in range(0,n_env_steps):
         actions[jj + ii*n_env_steps,:] = np.clip(p_control, -max_forcing_mag, max_forcing_mag)
         state, terminal, reward = environment.execute(actions= p_control)
-        states[jj + ii*n_env_steps,:] = state
+        observation = state["observation"]
+        states[jj + ii*n_env_steps,:] = observation
         time[jj + ii*n_env_steps] = environment.time
         sum_rewards += reward
 
