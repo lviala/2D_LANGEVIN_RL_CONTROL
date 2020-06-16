@@ -3,4 +3,4 @@ venv/
 __pycache__/
 figures/*
 agents/*
-.DS_Store/
+.DS_Store
