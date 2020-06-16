@@ -20,11 +20,11 @@ env_params = {
     "a" : 1.0 + 1.0j,
     "b" : -5.0e2,
     "D" : 0.0e-2,
-    "x0": 0.03 + 0.0j
+    "x0": None
     }
 
 # Path to save the figure
-#fig_path = 'figures/RLControl_De_0_Dt_0_dta_0p05_ep100_lstm1_32_gre_1_wne_1_grt_1_wnt_1_r_ma1em1.png'
+#fig_path = 'figures/RLControl_De_0_Dt_0_dta_0p05_ep50_dense_12_gre_1_wne_1_grt_1_wnt_1_r_ma1em1.png'
 fig_path = None
 
 # Create instance of complex Stuart-Landau equation environment
@@ -32,8 +32,8 @@ environment = Langevin2D_Env()
 environment.env_params = env_params
 
 # Load agent
-agent = Agent.load(directory = "./agents/saver_data_D_0_dta_0p05_maxa_1_ep300_lstm1_6_gr_1_wn_1_r_ma1em1",
-    filename='baseline-network-internal_lstm1-state')
+agent = Agent.load(directory = "./agents/saver_data_D_0_dta_0p05_maxa_1_ep100_lstm1_12_gr_1_wn_1_r_ma1em1",
+    filename='baseline-network-internal_lstm0-state')
 
 ###############################################################################
 #       EVALUTATIONS

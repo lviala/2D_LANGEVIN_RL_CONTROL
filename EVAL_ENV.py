@@ -7,11 +7,11 @@ from scipy import signal
 # Environment Parameters
 env_params = {
                 "dt": 0.0005,
-                "T" : 10.0,
+                "T" : 100.0,
                 "a" : 1.0 +1.0j,
                 "b" : -5.0e2,
                 "D" : 0.0e-4,
-                "x0": 0.03 + 0.0j
+                "x0": 0.04472135955 + 0.0j
                 }
 
 # Path to save the figure

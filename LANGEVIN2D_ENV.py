@@ -22,8 +22,8 @@ class Langevin2D_Env(Environment):
                 }
      
     optimization_params = {
-                        "min_value_forcing": -10.0,
-                        "max_value_forcing": 10.0
+                        "min_value_forcing": -1.0,
+                        "max_value_forcing": 1.0
                         }
 
 
@@ -68,8 +68,15 @@ class Langevin2D_Env(Environment):
         self.n = 0
 
         # Reset environment to initial position
-        #self.state = self.env_params["x0"]
-        self.state = np.random.normal(scale=0.1) + np.random.normal(scale=0.1)*1.0j
+        if self.env_params["x0"] is not None:
+            self.state = self.env_params["x0"]
+        else:
+            # Initial position on limit-cycle
+            eq = np.sqrt(-np.real(self.env_params["a"])/np.real(self.env_params["b"]))
+            self.state = eq*np.exp(np.random.normal(scale= 0.5*np.pi)*1j)
+        
+        print(self.state)
+        
         self.N = int(self.env_params["T"] / self.env_params["dt"])  # Maximum number of steps to take
         
         next_state = dict(
