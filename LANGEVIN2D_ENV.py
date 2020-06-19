@@ -140,7 +140,7 @@ class Langevin2D_Env(Environment):
         #reward =cum_reward / self.n_env_steps
 
         # Reward based on average magnitude of the state and action input penalization
-        reward = cum_reward / self.n_env_steps - 5e-2*(np.abs(action) / self.optimization_params["max_value_forcing"])
+        reward = cum_reward / self.n_env_steps - 1e-2*(np.abs(action) / self.optimization_params["max_value_forcing"])
 
         # Print completion status to console
         if (self.n % (self.N/20) == 0):

@@ -32,8 +32,8 @@ environment = Langevin2D_Env()
 environment.env_params = env_params
 
 # Load agent
-agent = Agent.load(directory = "./agents/saver_data_D_0_dta_0p05_maxa_1_ep100_lstm1_12_gr_1_wn_1_r_ma1em1",
-    filename='baseline-network-internal_lstm0-state')
+agent = Agent.load(directory = "./agents/saver_data_D_0_dta_0p05_maxa_1_ep100_lstm2_6_gr_1_wn_1_r_ma1em2",
+    filename='agent')
 
 ###############################################################################
 #       EVALUTATIONS

@@ -12,9 +12,11 @@ from LANGEVIN2D_ENV import Langevin2D_Env
 ###############################################################################
 #       PARAMETERS
 ###############################################################################
+# Parallel
+num_env = 8
 
 # Saver directory
-directory = os.path.join(os.getcwd(), 'agents' ,'saver_data_D_0_dta_0p05_maxa_1_ep300_lstm1_12_gr_1_wn_1_r_ma1em1')
+directory = os.path.join(os.getcwd(), 'agents' ,'saver_data_D_0_dta_0p05_maxa_1_ep100_lstm2_32_dense_64_gr_1_wn_1_r_ma1em2')
 
 # Environment Parameters
 env_params = {
@@ -34,7 +36,7 @@ optimization_params = {
 
 # Training Parameters
 training_params = {
-    "num_episodes" : 300,
+    "num_episodes" : 400,
     "dt_action"    : 0.05
 }
 
@@ -47,35 +49,41 @@ environment = Langevin2D_Env(n_env_steps = n_env_steps)
 environment.env_params = env_params
 environment.optimization_params = optimization_params
 
+environments = []
+
+for env in range(num_env):
+    environments.append(Langevin2D_Env(n_env_steps = n_env_steps))
+    environments[env].env_params = env_params
+    environments[env].optimization_params = optimization_params
+
 ###############################################################################
 #       ACTOR/CRITIC NETWORK DEFINITIONS
 ###############################################################################
 
 # Specify network architecture
 # DENSE LAYERS
-actor_network = [   
-        dict(type='retrieve', tensors='observation'),
-        dict(type='internal_lstm', size=12, length=1),
-        dict(type='dense', size=12),
-    ]
+# actor_network = [   
+#         dict(type='retrieve', tensors='observation'),
+#         dict(type='dense', size=2),
+#     ]
 
 # LSTM
-# actor_network = [
-#     [   
-#         dict(type='retrieve', tensors='observation'),
-#         dict(type='internal_lstm', size=6, length=1, bias=False),
-#         dict(type='register' , tensor ='intermed-1')
-#     ],
-#     [   
-#         dict(type='retrieve', tensors='prev_action'),
-#         dict(type='internal_lstm', size=6, length=1, bias=True),
-#         dict(type='register' , tensor ='intermed-2')
-#     ],
-#     [
-#         dict(type='retrieve', tensors=['intermed-1','intermed-2'], aggregation='concat'),
-#         dict(type='dense', size=12),
-#     ]
-# ]
+actor_network = [
+    [   
+        dict(type='retrieve', tensors='observation'),
+        dict(type='internal_lstm', size=32, length=2, bias=False),
+        dict(type='register' , tensor ='intermed-1')
+    ],
+    [   
+        dict(type='retrieve', tensors='prev_action'),
+        dict(type='internal_lstm', size=32, length=2, bias=False),
+        dict(type='register' , tensor ='intermed-2')
+    ],
+    [
+        dict(type='retrieve', tensors=['intermed-1','intermed-2'], aggregation='concat'),
+        dict(type='dense', size=64),
+    ]
+]
 
 critic_network = actor_network
 
@@ -92,9 +100,9 @@ agent = Agent.create(
     # Network
     network=actor_network,  # Policy NN specification
     # Optimization
-    batch_size=1,  # Number of episodes per update batch
-    learning_rate=1e-2,  # Optimizer learning rate
-    subsampling_fraction=0.75,  # Fraction of batch timesteps to subsample
+    batch_size=num_env,  # Number of episodes per update batch
+    learning_rate=1e-4,  # Optimizer learning rate
+    subsampling_fraction=0.33,  # Fraction of batch timesteps to subsample
     optimization_steps=25,
     # Reward estimation
     likelihood_ratio_clipping=0.2, # The epsilon of the ppo CLI objective
@@ -104,12 +112,14 @@ agent = Agent.create(
     critic_network=critic_network,  # Critic NN specification
     critic_optimizer=dict(
         type='multi_step', num_steps=5,
-        optimizer=dict(type='adam', learning_rate=1e-2)
+        optimizer=dict(type='adam', learning_rate=1e-4)
     ),
     # Regularization
     entropy_regularization=0.01,  # To discourage policy from being too 'certain'
+    # Parallel
+    parallel_interactions=num_env,
     # TensorFlow
-    saver=dict(directory=directory),  # TensorFlow saver configuration for periodic implicit saving
+    saver=dict(directory=directory, filename="agent"),  # TensorFlow saver configuration for periodic implicit saving
     # TensorBoard Summarizer
     #summarizer=dict(directory=os.path.join(directory, 'summarizer') , labels="all")
 )
@@ -120,8 +130,9 @@ agent = Agent.create(
 
 # Runner definition - Serial runner
 runner = Runner(
-    environment=environment,
+    environments=environments,
     agent=agent,
+    remote="multiprocessing",
     max_episode_timesteps=max_episode_timesteps,
     #evaluation=True
 )
@@ -129,7 +140,8 @@ runner = Runner(
 # Proceed to training
 runner.run(
     num_episodes=training_params["num_episodes"],
-    save_best_agent=os.path.join(os.getcwd(), 'best_agent')
+    sync_episodes=True,
+    #save_best_agent=os.path.join(os.getcwd(), 'best_agent')
 )
 
 agent.save()
